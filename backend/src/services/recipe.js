@@ -1,8 +1,8 @@
 const { createPrompt } = require("../externalIntegration/openai");
 
 module.exports = {
-  getRecipes: async () => {
-    const data = await createPrompt();
+  getRecipes: async ({ userPrompt }) => {
+    const data = await createPrompt({ userPrompt });
     return data;
   },
 };

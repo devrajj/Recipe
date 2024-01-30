@@ -5,14 +5,18 @@ const openai = new OpenAI({
 });
 
 module.exports = {
-  createPrompt: async () => {
+  createPrompt: async ({ userPrompt }) => {
     try {
       const data = await openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
           {
+            role: "system",
+            content: "You are a helpful assistant that provides recipes.",
+          },
+          {
             role: "user",
-            content: "Only Say Hello!",
+            content: `Give me the recipe for ${userPrompt}`,
           },
         ],
       });
