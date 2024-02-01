@@ -9,12 +9,27 @@ const MainContainer = styled.div`
 
 const MainHeading = styled.div`
   display: flex;
+  height: 50px;
+  justify-content: space-between;
+  cursor: default;
+`;
+
+const MainHeadingText = styled.div`
+  display: flex;
   align-items: center;
   margin-left: 72px;
   font-size: 24px;
   font-weight: 600;
-  height: 50px;
   color: black;
+`;
+
+const Logout = styled.div`
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  font-weight: 600;
+  color: black;
+  margin-right: 10px;
 `;
 
 const ChatBody = styled.div`
@@ -141,7 +156,10 @@ export default function CustomChatBot() {
   const [toggleFavourite, setToggleFavourite] = useState(false);
   return (
     <MainContainer>
-      <MainHeading>RECIPE CHATBOT</MainHeading>
+      <MainHeading>
+        <MainHeadingText>RECIPE CHATBOT</MainHeadingText>
+        <Logout onClick={() => {}}>Logout</Logout>
+      </MainHeading>
       <ChatBody>
         <FavouritesContainer>
           <FavouritesText>Favourites</FavouritesText>
