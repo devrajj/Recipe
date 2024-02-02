@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getRecipeInfo } from "../../utils/networkUtils";
 import styled from "styled-components";
 
 const MainContainer = styled.div`
@@ -103,6 +104,11 @@ const ChatBotBody = styled.div`
   background: white;
 `;
 
+const ContentTextAndFile = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
 const Content = styled.div`
   display: flex;
   margin-left: 16px;
@@ -113,9 +119,14 @@ const Content = styled.div`
 `;
 
 const BodyText = styled.p`
+  font-family: arial;
   font-size: 16px;
   width: 100%;
   text-align: left;
+`;
+
+const BodyFile = styled.img`
+  margin: 0px auto;
 `;
 
 const ChatFooter = styled.div`
@@ -150,15 +161,34 @@ const SendButton = styled.img`
 `;
 
 export default function CustomChatBot() {
-  const [text, setText] = useState(
-    "Hello there how are you there. Hello there how are you there. Hello there how are you there. Hello there how are you there"
-  );
+  const [content, setContent] = useState({ text: "", file: "" });
+  const [isLogout, setIsLogout] = useState();
+  const [sendPrompt, setSendPrompt] = useState(false);
   const [toggleFavourite, setToggleFavourite] = useState(false);
+
+  useEffect(() => {
+    if (isLogout) {
+      //integrate logout api here
+    }
+  }, [isLogout]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (sendPrompt) {
+        const res = await getRecipeInfo();
+        if (res && res.data && res.data.ok && res.data.data) {
+          setContent(res.data.data);
+        }
+      }
+    };
+    fetchData();
+  }, [sendPrompt]);
+
   return (
     <MainContainer>
       <MainHeading>
         <MainHeadingText>RECIPE CHATBOT</MainHeadingText>
-        <Logout onClick={() => {}}>Logout</Logout>
+        <Logout onClick={() => setIsLogout(true)}>Logout</Logout>
       </MainHeading>
       <ChatBody>
         <FavouritesContainer>
@@ -171,15 +201,28 @@ export default function CustomChatBot() {
         </FavouritesContainer>
         <ChatBotBody>
           <Content>
-            <BodyText>{text}</BodyText>
-            <StarIcon
-              src={
-                !toggleFavourite ? "/icons/star.svg" : "/icons/goldenStar.png"
-              }
-              height={25}
-              width={25}
-              onClick={() => setToggleFavourite(!toggleFavourite)}
-            />
+            <ContentTextAndFile>
+              {content.text ? <BodyText>{content.text}</BodyText> : null}
+              {content.file ? (
+                <BodyFile
+                  src={
+                    "https://mstage.uolo.co/media/images/MjBhYzYwOTQtZmIxMS00MjA4LWExNmItN2U1MWFiODYzMjFkLmpwZWc.jpeg"
+                  }
+                  height={"500px"}
+                  width={"500px"}
+                ></BodyFile>
+              ) : null}
+            </ContentTextAndFile>
+            {content.file || content.text ? (
+              <StarIcon
+                src={
+                  !toggleFavourite ? "/icons/star.svg" : "/icons/goldenStar.png"
+                }
+                height={25}
+                width={25}
+                onClick={() => setToggleFavourite(!toggleFavourite)}
+              />
+            ) : null}
           </Content>
           <ChatFooter>
             <InputPrompt placeholder="Ask me for a mouthwatering recipe! 🍽️"></InputPrompt>
@@ -187,6 +230,7 @@ export default function CustomChatBot() {
               src="/icons/right.png"
               width={40}
               alt="Send"
+              onClick={() => setSendPrompt(true)}
             ></SendButton>
           </ChatFooter>
         </ChatBotBody>
