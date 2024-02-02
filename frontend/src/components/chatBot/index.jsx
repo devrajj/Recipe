@@ -54,7 +54,6 @@ const FavouritesText = styled.div`
 `;
 
 const FavouritesContent = styled.div`
-  height: 35px;
   display: flex;
   align-items: center;
   font-size: 16px;
@@ -62,12 +61,14 @@ const FavouritesContent = styled.div`
   font-weight: 300;
   margin-top: 15px;
   text-align: left;
-  margin: 15px 10px 5px 10px;
-  background: #0256d6;
+  margin: 9px 10px 5px 10px;
+  background: ${({ isFavouriteIconClicked }) =>
+    !isFavouriteIconClicked ? "none" : "#0256d6"};
   font-family: Source Sans Pro;
   letter-spacing: 0.00000015px;
   line-height: 17px;
   font-style: normal;
+  cursor: default;
 `;
 
 const FavouriteLine = styled.div`
@@ -76,19 +77,6 @@ const FavouriteLine = styled.div`
   width: 50%;
   margin-top: 10px;
   border-radius: 63px;
-`;
-
-const FavouritesContent2 = styled.div`
-  font-size: 16px;
-  color: white;
-  font-weight: 300;
-  margin-top: 15px;
-  text-align: left;
-  margin: 15px 10px 5px 10px;
-  font-family: Source Sans Pro;
-  letter-spacing: 0.00000015px;
-  line-height: 17px;
-  font-style: normal;
 `;
 
 const ChatBotBody = styled.div`
@@ -165,6 +153,8 @@ export default function CustomChatBot() {
   const [isLogout, setIsLogout] = useState();
   const [sendPrompt, setSendPrompt] = useState(false);
   const [toggleFavourite, setToggleFavourite] = useState(false);
+  const [favouriteList, setFavouriteList] = useState("helllo");
+  const [isFavouriteIconClicked, setIsFavouriteIconClicked] = useState(false);
 
   useEffect(() => {
     if (isLogout) {
@@ -194,10 +184,12 @@ export default function CustomChatBot() {
         <FavouritesContainer>
           <FavouritesText>Favourites</FavouritesText>
           <FavouriteLine></FavouriteLine>
-          <FavouritesContent>
-            This is favourite content This is favourite ....
+          <FavouritesContent
+            onClick={() => setIsFavouriteIconClicked(true)}
+            isFavouriteIconClicked={isFavouriteIconClicked}
+          >
+            {favouriteList}
           </FavouritesContent>
-          <FavouritesContent2>This is favourite content 2</FavouritesContent2>
         </FavouritesContainer>
         <ChatBotBody>
           <Content>
@@ -220,7 +212,10 @@ export default function CustomChatBot() {
                 }
                 height={25}
                 width={25}
-                onClick={() => setToggleFavourite(!toggleFavourite)}
+                onClick={() => {
+                  setFavouriteList(content.text.trim().slice(0, 100));
+                  setToggleFavourite(!toggleFavourite);
+                }}
               />
             ) : null}
           </Content>
