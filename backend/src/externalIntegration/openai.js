@@ -1,31 +1,32 @@
 const OpenAI = require("openai");
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const generateImage = async ({ recipeText }) => {
-  try {
-    // we can change the models and other options of image generation from here
-    const data = await openai.images.generate({
-      model: "dall-e-2",
-      prompt: recipeText,
-      n: 1,
-      quality: "standard",
-      response_format: "url",
+class RecipeAssistant {
+  constructor() {
+    this.openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
     });
-    return data.data[0].url;
-  } catch (err) {
-    console.error("err:", err.stack);
-    return "";
   }
-};
-
-module.exports = {
-  createPrompt: async ({ userPrompt }) => {
+  async generateImage({ userPrompt }) {
     try {
-      // we can change the models and other options of completions from here
-      const data = await openai.chat.completions.create({
+      // we can change the models and other options of image generation from here
+      const data = await this.openai.images.generate({
+        model: "dall-e-2",
+        prompt: `Give me image for recipe for ${userPrompt}`,
+        n: 1,
+        quality: "standard",
+        response_format: "url",
+      });
+      return data.data[0]?.url || "";
+    } catch (err) {
+      console.error("Error in generateImage:", err.stack);
+      return "";
+    }
+  }
+
+  async generateCompletion({ userPrompt }) {
+    try {
+      // we can change the models and other options of image generation from here
+      const data = await this.openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
           {
@@ -38,19 +39,35 @@ module.exports = {
           },
         ],
       });
-      const text = data.choices[0].message.content;
-      const recipeText = data.choices[0].message.content.trim().slice(0, 1000);
-      const file = await generateImage({ recipeText });
+      return (
+        data.choices[0]?.message.content ||
+        `Sorry cannot find recipe for ${userPrompt}`
+      );
+    } catch (err) {
+      console.error("Error in generateCompletion:", err.stack);
+      return `Sorry cannot find recipe for ${userPrompt}`;
+    }
+  }
+
+  async createPrompt({ userPrompt }) {
+    try {
+      // we can change the models and other options of completions from here
+      const [completionData, imageData] = await Promise.allSettled([
+        this.generateCompletion({ userPrompt }),
+        this.generateImage({ userPrompt }),
+      ]);
       return {
         ok: true,
         data: {
-          text,
-          file,
+          text: completionData.value,
+          file: imageData.value,
         },
       };
     } catch (err) {
       console.error("Error in createPrompt:", err.stack);
       return { ok: false, err: err.stack };
     }
-  },
-};
+  }
+}
+
+module.exports = RecipeAssistant;

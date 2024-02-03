@@ -153,7 +153,7 @@ export default function CustomChatBot() {
   const [isLogout, setIsLogout] = useState();
   const [sendPrompt, setSendPrompt] = useState(false);
   const [toggleFavourite, setToggleFavourite] = useState(false);
-  const [favouriteList, setFavouriteList] = useState("helllo");
+  const [favouriteList, setFavouriteList] = useState("");
   const [isFavouriteIconClicked, setIsFavouriteIconClicked] = useState(false);
 
   useEffect(() => {
