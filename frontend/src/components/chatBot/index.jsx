@@ -56,7 +56,6 @@ const FavouritesText = styled.div`
 `;
 
 const FavouritesContent = styled.div`
-  display: flex;
   align-items: center;
   font-size: 16px;
   color: white;
@@ -71,6 +70,10 @@ const FavouritesContent = styled.div`
   line-height: 17px;
   font-style: normal;
   cursor: default;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  max-width: 100%;
 `;
 
 const FavouriteLine = styled.div`
