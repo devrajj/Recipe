@@ -4,10 +4,10 @@ module.exports = {
   getRecipes: async (req, res) => {
     try {
       const userId = req.user.userId;
+      const { userPrompt } = req.body;
       if (!userId) {
         return res.invalid({ msg: "Invalid User" });
       }
-      const { userPrompt } = req.body;
       if (!userPrompt) {
         return res.invalid({ msg: "Please ask for a recipe" });
       }
@@ -24,12 +24,11 @@ module.exports = {
 
   getChatbotHistory: async (req, res) => {
     try {
-      const { userPrompt, userId } = req.body;
-      if (!userPrompt) {
-        return res.invalid({ msg: "Please ask for a recipe" });
+      const userId = req.user.userId;
+      if (!userId) {
+        return res.invalid({ msg: "Invalid User" });
       }
       const response = await recipeService.getChatbotHistory({
-        userPrompt,
         userId,
       });
       if (response.ok) {

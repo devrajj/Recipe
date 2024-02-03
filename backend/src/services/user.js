@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 require("dotenv").config();
 const secretKey = process.env.JWT_SECRET_KEY;
 const userModel = require("../models/user");
+const blacklistjwtModel = require("../models/blacklistjwt");
 const jwt = require("jsonwebtoken");
 
 async function generateToken({ email }) {
@@ -66,6 +67,19 @@ module.exports = {
       });
       const token = await generateToken({ email });
       return { ok: true, data: token };
+    } catch (err) {
+      console.error("Error in signupUser service:", err.stack);
+      return { ok: false, err: err.stack };
+    }
+  },
+  logoutUser: async ({ token }) => {
+    try {
+      await blacklistjwtModel.create({
+        insertDict: {
+          token,
+        },
+      });
+      return { ok: true, data: "Successfully Logged Out" };
     } catch (err) {
       console.error("Error in signupUser service:", err.stack);
       return { ok: false, err: err.stack };

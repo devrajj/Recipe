@@ -33,12 +33,20 @@ module.exports = {
 
   getChatbotHistory: async ({ userId }) => {
     try {
+      const recipeList = await generatedRecipesModel.find({
+        query: {
+          user: userId,
+        },
+        projection: {
+          _id: 1,
+          question: 1,
+          recipeText: 1,
+          recipeFile: 1,
+        },
+      });
       return {
         ok: true,
-        data: {
-          text: "",
-          file: "",
-        },
+        data: recipeList,
       };
     } catch (err) {
       console.error("Error in getChatbotHistory recipe:", err.stack);

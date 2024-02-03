@@ -7,6 +7,9 @@ module.exports = {
       if (!email) {
         return res.invalid({ msg: "email is required" });
       }
+      if (!password) {
+        return res.invalid({ msg: "password is required" });
+      }
       const response = await userService.loginUser({ email, password });
       if (response.ok) {
         return res.success({ data: response.data });
@@ -41,6 +44,20 @@ module.exports = {
       return res.failure({ msg: response.err });
     } catch (err) {
       console.error("error in signupUser:", err.stack);
+      return res.failure({ msg: err.stack });
+    }
+  },
+
+  logoutUser: async function (req, res) {
+    try {
+      const authorization = req.headers.authorization;
+      const response = await userService.logoutUser({ token: authorization });
+      if (response.ok) {
+        return res.success({ data: response.data });
+      }
+      return res.failure({ msg: response.err });
+    } catch (err) {
+      console.error("error in logoutUser:", err.stack);
       return res.failure({ msg: err.stack });
     }
   },

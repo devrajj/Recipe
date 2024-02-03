@@ -11,7 +11,25 @@ module.exports = {
         },
       };
     } catch (err) {
-      console.error("Error in fetchFavouriteListForUser:", err.stack);
+      console.error("Error in fetchFavouriteListForUser service:", err.stack);
+      return { ok: false, err: err.stack };
+    }
+  },
+
+  markAsFavourite: async ({ userId, recipeId }) => {
+    try {
+      await favouriteModel.create({
+        insertDict: {
+          user: userId,
+          recipe: recipeId,
+        },
+      });
+      return {
+        ok: true,
+        data: "Successfully marked as favourite",
+      };
+    } catch (err) {
+      console.error("Error in markAsFavourite service:", err.stack);
       return { ok: false, err: err.stack };
     }
   },

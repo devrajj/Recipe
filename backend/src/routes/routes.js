@@ -17,7 +17,11 @@ router.post("/signup", userController.signupUser);
 router.post("/get-recipes", authenticateJwtToken, recipeController.getRecipes);
 
 // Mark as Favourite
-router.post("/get-recipes", authenticateJwtToken, recipeController.getRecipes);
+router.post(
+  "/mark-as-favourite",
+  authenticateJwtToken,
+  favouriteController.markAsFavourite
+);
 
 // Fetch Favourites
 router.get(
@@ -32,5 +36,8 @@ router.get(
   authenticateJwtToken,
   recipeController.getChatbotHistory
 );
+
+// Logout user
+router.delete("/logout", authenticateJwtToken, userController.logoutUser);
 
 module.exports = router;
