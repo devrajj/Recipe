@@ -30,4 +30,22 @@ module.exports = {
     generatedRecipesModel.updateOne(query, updateDict),
   update: async ({ query, updateDict }) =>
     generatedRecipesModel.updateMany(query, updateDict),
+  fetchGeneratedRecipesForUser: async ({ userId, offset, pageLength }) =>
+    generatedRecipesModel.aggregate([
+      { $match: { user: userId } },
+      {
+        $skip: offset,
+      },
+      {
+        $limit: pageLength,
+      },
+      {
+        $project: {
+          _id: 1,
+          question: 1,
+          recipeText: 1,
+          recipeFile: 1,
+        },
+      },
+    ]),
 };

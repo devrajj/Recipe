@@ -31,22 +31,22 @@ module.exports = {
     }
   },
 
-  getChatbotHistory: async ({ userId }) => {
+  getChatbotHistory: async ({ userId, pageNumber, pageLength }) => {
     try {
-      const recipeList = await generatedRecipesModel.find({
-        query: {
-          user: userId,
-        },
-        projection: {
-          _id: 1,
-          question: 1,
-          recipeText: 1,
-          recipeFile: 1,
-        },
-      });
+      const offset = (pageNumber - 1) * pageLength;
+      let recipeList = await generatedRecipesModel.fetchGeneratedRecipesForUser(
+        {
+          userId,
+          offset,
+          pageLength,
+        }
+      );
       return {
         ok: true,
-        data: recipeList,
+        data: {
+          recipeList,
+          pageNumber,
+        },
       };
     } catch (err) {
       console.error("Error in getChatbotHistory recipe:", err.stack);

@@ -23,6 +23,13 @@ router.post(
   favouriteController.markAsFavourite
 );
 
+// Unmark as Favourite
+router.put(
+  "/mark-as-unfavourite",
+  authenticateJwtToken,
+  favouriteController.markAsUnFavourite
+);
+
 // Fetch Favourites
 router.get(
   "/get-favourite",

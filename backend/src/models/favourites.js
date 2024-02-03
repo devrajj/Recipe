@@ -30,4 +30,35 @@ module.exports = {
     favouriteModel.updateOne(query, updateDict),
   update: async ({ query, updateDict }) =>
     favouriteModel.updateMany(query, updateDict),
+  deleteOne: async ({ query }) => favouriteModel.deleteOne(query),
+  fetchFavouriteListForUser: async ({ userId, offset, pageLength }) =>
+    favouriteModel.aggregate([
+      { $match: { user: userId } },
+      {
+        $lookup: {
+          from: "generatedrecipes",
+          localField: "recipe",
+          foreignField: "_id",
+          as: "recipeDetails",
+        },
+      },
+      {
+        $unwind: "$recipeDetails",
+      },
+      {
+        $skip: offset,
+      },
+      {
+        $limit: pageLength,
+      },
+      {
+        $project: {
+          favouriteId: "$_id",
+          recipeId: "$recipeDetails._id",
+          question: "$recipeDetails.question",
+          text: "$recipeDetails.recipeText",
+          file: "recipeDetails.recipeFile",
+        },
+      },
+    ]),
 };

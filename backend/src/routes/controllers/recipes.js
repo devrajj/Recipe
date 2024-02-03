@@ -25,11 +25,20 @@ module.exports = {
   getChatbotHistory: async (req, res) => {
     try {
       const userId = req.user.userId;
+      const { pageNumber = 0, pageLength = 200 } = req.query;
       if (!userId) {
         return res.invalid({ msg: "Invalid User" });
       }
+      if (pageLength < 0) {
+        return res.invalid({ msg: "Invalid Page Length" });
+      }
+      if (pageNumber < 1) {
+        return res.invalid({ msg: "Invalid Page Number" });
+      }
       const response = await recipeService.getChatbotHistory({
         userId,
+        pageNumber: parseInt(pageNumber, 10),
+        pageLength: parseInt(pageLength, 10),
       });
       if (response.ok) {
         return res.success({ data: response.data });
