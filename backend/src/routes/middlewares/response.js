@@ -1,4 +1,9 @@
 module.exports = (req, res, next) => {
+  res.unauthorized = ({ msg }) =>
+    res
+      .status(401)
+      .json({ ok: false, err: msg || "Authentication Failed", data: null });
+
   res.invalid = ({ msg }) =>
     res
       .status(200)

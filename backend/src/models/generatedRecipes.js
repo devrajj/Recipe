@@ -4,7 +4,7 @@ const generatedRecipeSchema = new mongoose.Schema(
   {
     question: { type: String, required: true },
     recipeText: { type: String, required: true },
-    recipeFile: { type: String, required: true },
+    recipeFile: { type: String },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true },
   },
   { timestamps: true }
@@ -19,6 +19,7 @@ const generatedRecipesModel = mongoose.model(
 );
 
 module.exports = {
+  generatedRecipesModel,
   create: async ({ insertDict }) =>
     new generatedRecipesModel(insertDict).save(),
   findOne: async ({ query, projection }) =>
