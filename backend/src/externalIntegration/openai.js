@@ -11,7 +11,7 @@ class RecipeAssistant {
       // we can change the models and other options of image generation from here
       const data = await this.openai.images.generate({
         model: "dall-e-3",
-        prompt: `Give me image for recipe for ${userPrompt}. If not a recipe then return the url of file as null`,
+        prompt: `Give me image for recipe for ${userPrompt}. If it not a recipe then don't generate any image`,
         n: 1,
         quality: "standard",
         response_format: "url",
