@@ -181,6 +181,13 @@ const SendButton = styled.div`
   cursor: pointer;
 `;
 
+const UserText = styled.div`
+  display: contents;
+  font-weight: 900;
+  font-family: system-ui;
+  color: brown;
+`;
+
 export default function CustomChatBot() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -323,13 +330,22 @@ export default function CustomChatBot() {
               <Content id={`recipeContent_${content._id}`} key={index}>
                 <ContentTextAndFile key={index}>
                   {content.question && (
-                    <BodyText key={index}>{content.question}</BodyText>
+                    <BodyText key={index}>
+                      <UserText>User:</UserText> {content.question}
+                    </BodyText>
                   )}
                   {content.recipeText && (
-                    <BodyText key={index}>{content.recipeText}</BodyText>
+                    <BodyText key={index}>
+                      <UserText>RecipeChatBot:</UserText> {content.recipeText}
+                    </BodyText>
                   )}
-                  {content.recipeFile && (
+                  {content.recipeFile ? (
                     <BodyFile key={index} src={content.recipeFile}></BodyFile>
+                  ) : (
+                    <BodyText key={index}>
+                      Sorry, the image cannot be generated due to an invalid
+                      recipe prompt.
+                    </BodyText>
                   )}
                 </ContentTextAndFile>
                 {content.recipeFile || content.recipeText ? (
