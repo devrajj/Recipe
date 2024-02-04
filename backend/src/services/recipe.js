@@ -1,15 +1,17 @@
 const RecipeAssistant = require("../externalIntegration/openai");
 const generatedRecipesModel = require("../models/generatedRecipes");
 
-async function storeGeneratedRecipes({ recipeData, question, userId }) {
-  await generatedRecipesModel.create({
+async function storeGeneratedRecipes({ text, file, question, userId }) {
+  const createdDocument = await generatedRecipesModel.create({
     insertDict: {
       question,
-      recipeText: recipeData.text,
-      recipeFile: recipeData.file,
+      recipeText: text,
+      recipeFile: file,
       user: userId,
     },
   });
+  const createdDocumentId = createdDocument._id;
+  return createdDocumentId;
 }
 
 module.exports = {
@@ -17,14 +19,28 @@ module.exports = {
     try {
       const recipeAssistant = new RecipeAssistant();
       const data = await recipeAssistant.createPrompt({ userPrompt });
-      if (data.ok && data.data) {
-        await storeGeneratedRecipes({
-          recipeData: data.data,
+      if (data.text) {
+        const createdDocumentId = await storeGeneratedRecipes({
           question: userPrompt,
           userId,
+          text: data.text,
+          file: data.file,
         });
+        return {
+          ok: true,
+          data: {
+            _id: createdDocumentId,
+            question: userPrompt,
+            recipeText: data.text,
+            recipeFile: data.file,
+            isFavourite: false,
+          },
+        };
       }
-      return data;
+      return {
+        ok: false,
+        err: data.err,
+      };
     } catch (err) {
       console.error("Error in getRecipes recipe:", err.stack);
       return { ok: false, err: err.stack };

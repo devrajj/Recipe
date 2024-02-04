@@ -1,7 +1,18 @@
 import { useState, useEffect } from "react";
 import { Send } from "../../icons/send";
-import { getRecipeInfo } from "../../utils/networkUtils";
+import { useNavigate } from "react-router-dom";
+import {
+  getRecipeInfo,
+  markAsFavourite,
+  markAsUnFavourite,
+  getFavouriteList,
+  getChatHistory,
+  logoutUser,
+} from "../../utils/networkUtils";
 import styled from "styled-components";
+import ErrorModal from "../shared/ErrorModal";
+import Modal from "../shared/Modal";
+import LoaderComponent from "../shared/Loader";
 
 const MainContainer = styled.div`
   display: flex;
@@ -162,6 +173,7 @@ const InputPrompt = styled.input`
 const StarIcon = styled.img`
   margin-top: 16px;
   margin-right: 10px;
+  cursor: pointer;
 `;
 
 const SendButton = styled.div`
@@ -170,33 +182,54 @@ const SendButton = styled.div`
 `;
 
 export default function CustomChatBot() {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [userPrompt, setUserPrompt] = useState("");
-  const [recipeContent, setRecipeContent] = useState([
-    {
-      text: "Sure! Here's a recipe for homemade paneer:\n\nIngredients:\n- 1 liter whole milk\n- 2 tablespoons lemon juice or white vinegar\n- Water, for rinsing\n\nInstructions:\n1. Start by heating the milk in a large pot over medium heat. Stir occasionally to prevent the milk from scorching.\n\n2. Once the milk reaches a gentle boil, reduce the heat to low. Add the lemon juice or white vinegar while stirring continuously. This will cause the milk to curdle and separate into curds (solid) and whey (liquid).\n\n3. Continue stirring gently for a minute or two, until the curds have fully separated from the whey. If the whey still looks milky, add a little more lemon juice or vinegar.\n\n4. Turn off the heat and place a colander lined with a muslin cloth or cheesecloth over a large bowl or in the sink.\n\n5. Pour the curdled milk mixture into the colander, allowing the whey to drain away. Gather all the corners of the cloth and gently squeeze out any excess whey.\n\n6. Rinse the curds under running water to remove any residual lemon juice or vinegar. This step is crucial to remove any tangy taste from the paneer.\n\n7. Twist the cloth to tighten the bundle, then place a weight (such as a heavy pot or a couple of canned goods) on top of the bundled paneer to further press out the whey. Let it sit for about 1 hour, or until it becomes firm.\n\n8. Once the paneer is firm, remove it from the cloth and cut it into cubes or desired shapes. Your homemade paneer is now ready to be used in various recipes!\n\nNote: Paneer can be stored in the refrigerator in an airtight container for up to 2-3 days.\n\nEnjoy your homemade paneer in dishes like palak paneer, paneer tikka, or matar paneer!",
-      file: "https://oaidalleapiprodscus.blob.core.windows.net/private/org-H6RvK5h1LfF7olqVAuKWLmiM/user-0ix7QQvhh7GssgoJ40MFPwvD/img-j0EjlHmBL7obGCwHvxuTC5pz.png?st=2024-02-03T07%3A35%3A23Z&se=2024-02-03T09%3A35%3A23Z&sp=r&sv=2021-08-06&sr=b&rscd=inline&rsct=image/png&skoid=6aaadede-4fb3-4698-a8f6-684d7786b067&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2024-02-03T02%3A26%3A17Z&ske=2024-02-04T02%3A26%3A17Z&sks=b&skv=2021-08-06&sig=gUnU4X5upQ1QFg1T8o/YkzikqGzlyDbeYhbMTMNVX3w%3D",
-    },
-  ]);
-  const [isLogout, setIsLogout] = useState();
+  const [finalPrompt, setFinalPrompt] = useState("");
+  const [inputPrompt, setInputPrompt] = useState("");
+  const [recipeContent, setRecipeContent] = useState([]);
   const [sendPrompt, setSendPrompt] = useState(false);
-  const [toggleFavourite, setToggleFavourite] = useState(false);
-  const [favouriteList, setFavouriteList] = useState("");
+  const [favouriteList, setFavouriteList] = useState([]);
   const [isFavouriteIconClicked, setIsFavouriteIconClicked] = useState(false);
+  const [error, setError] = useState("");
+  const [clickedIndex, setClickedIndex] = useState(null);
 
   useEffect(() => {
-    if (isLogout) {
-      //integrate logout api here
+    async function fetchRecipeChat() {
+      const res = await getChatHistory({ pageNumber: 1, pageLength: 200 });
+      if (
+        res &&
+        res.data &&
+        res.data.ok &&
+        res.data.data &&
+        res.data.data.recipeList
+      ) {
+        setRecipeContent(res.data.data.recipeList);
+      }
     }
-  }, [isLogout]);
+    async function fetchFavouriteList() {
+      const res = await getFavouriteList({ pageNumber: 1, pageLength: 200 });
+      if (
+        res &&
+        res.data &&
+        res.data.ok &&
+        res.data.data &&
+        res.data.data.favouriteList
+      ) {
+        setFavouriteList(res.data.data.favouriteList);
+      }
+    }
+    fetchRecipeChat();
+    fetchFavouriteList();
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (sendPrompt && userPrompt && !isLoading) {
+      if (sendPrompt && finalPrompt && !isLoading) {
         try {
           setIsLoading(true);
-          const res = await getRecipeInfo({ userPrompt });
-          setUserPrompt("");
+          const res = await getRecipeInfo({ userPrompt: finalPrompt });
+          setFinalPrompt("");
+          setSendPrompt(false);
           if (res && res.data && res.data.ok && res.data.data) {
             setRecipeContent((prev) => [...prev, res.data.data]);
           }
@@ -206,50 +239,111 @@ export default function CustomChatBot() {
       }
     };
     fetchData();
-  }, [sendPrompt, userPrompt, isLoading]);
+  }, [sendPrompt, finalPrompt, isLoading]);
 
+  async function handleLogout() {
+    try {
+      const res = await logoutUser();
+      if (res && res.data && res.data.ok && res.data.data) {
+        navigate("/");
+      } else {
+        setError(res.data.err);
+      }
+    } catch (err) {
+      console.error("Signup failed", err);
+      setError("Something went wrong");
+    }
+  }
+
+  const handleFavouriteToggle = async ({ content }) => {
+    if (content.isFavourite) {
+      await markAsUnFavourite({ recipeId: content._id });
+      content.isFavourite = false;
+      setFavouriteList((prev) =>
+        prev.filter(
+          (item) => item.recipeId.toString() !== content._id.toString()
+        )
+      );
+    } else {
+      await markAsFavourite({ recipeId: content._id });
+      content.isFavourite = true;
+      setFavouriteList((prev) => [
+        ...prev,
+        {
+          recipeId: content._id.toString(),
+          question: content.question,
+          text: content.recipeText,
+          file: content.recipeFile,
+        },
+      ]);
+    }
+  };
+
+  const closeErrorModal = () => {
+    setError("");
+  };
+
+  const handleFavouritesContentClick = (content, index) => {
+    setClickedIndex(index);
+    setIsFavouriteIconClicked(!isFavouriteIconClicked);
+    const recipeContentElement = document.getElementById(
+      `recipeContent_${content.recipeId}`
+    );
+    if (recipeContentElement) {
+      recipeContentElement.scrollIntoView({ behavior: "smooth" });
+    }
+  };
   return (
     <MainContainer>
       <MainHeading>
         <MainHeadingText>RECIPE CHATBOT</MainHeadingText>
-        <Logout onClick={() => setIsLogout(true)}>Logout</Logout>
+        <Logout onClick={handleLogout}>Logout</Logout>
       </MainHeading>
       <ChatBody>
         <FavouritesContainer>
           <FavouritesText>Favourites</FavouritesText>
           <FavouriteLine></FavouriteLine>
-          <FavouritesContent
-            onClick={() => setIsFavouriteIconClicked(true)}
-            isFavouriteIconClicked={isFavouriteIconClicked}
-          >
-            {favouriteList}
-          </FavouritesContent>
+          {favouriteList.map((content, index) => {
+            return (
+              <FavouritesContent
+                key={index}
+                onClick={() => handleFavouritesContentClick(content, index)}
+                isFavouriteIconClicked={
+                  clickedIndex === index && isFavouriteIconClicked
+                }
+              >
+                {content.question}
+              </FavouritesContent>
+            );
+          })}
         </FavouritesContainer>
         <ChatBodyAndFooter>
           <ChatBotBody>
             {recipeContent.map((content, index) => (
-              <Content>
+              <Content id={`recipeContent_${content._id}`} key={index}>
                 <ContentTextAndFile key={index}>
-                  {content.text ? (
-                    <BodyText key={index}>{content.text}</BodyText>
-                  ) : null}
-                  {content.file ? (
-                    <BodyFile key={index} src={content.file}></BodyFile>
-                  ) : null}
+                  {content.question && (
+                    <BodyText key={index}>{content.question}</BodyText>
+                  )}
+                  {content.recipeText && (
+                    <BodyText key={index}>{content.recipeText}</BodyText>
+                  )}
+                  {content.recipeFile && (
+                    <BodyFile key={index} src={content.recipeFile}></BodyFile>
+                  )}
                 </ContentTextAndFile>
-                {content.file || content.text ? (
+                {content.recipeFile || content.recipeText ? (
                   <StarIcon
                     key={index}
                     src={
-                      !toggleFavourite
+                      !content.isFavourite
                         ? "/icons/star.svg"
                         : "/icons/goldenStar.png"
                     }
                     height={25}
                     width={25}
                     onClick={() => {
-                      setFavouriteList(content.text.trim().slice(0, 100));
-                      setToggleFavourite(!toggleFavourite);
+                      handleFavouriteToggle({ content });
                     }}
                   />
                 ) : null}
@@ -259,20 +353,24 @@ export default function CustomChatBot() {
           <ChatFooter>
             <InputPrompt
               type="text"
-              value={userPrompt}
+              value={inputPrompt}
               placeholder="Ask me for a mouthwatering recipe! 🍽️"
-              onChange={(e) => setUserPrompt(e.target.value)}
+              onChange={(e) => {
+                setFinalPrompt(e.target.value);
+                setInputPrompt(e.target.value);
+              }}
             ></InputPrompt>
             <SendButton
-              onClick={() =>
-                userPrompt.length && !isLoading
-                  ? setSendPrompt(userPrompt)
-                  : null
-              }
+              onClick={() => {
+                if (finalPrompt.length && !isLoading) {
+                  setSendPrompt(finalPrompt);
+                  setInputPrompt("");
+                }
+              }}
             >
               <Send
                 color={
-                  isLoading ? "grey" : !userPrompt.length ? "white" : "blue"
+                  isLoading ? "grey" : !finalPrompt.length ? "white" : "blue"
                 }
                 height={40}
                 width={30}
@@ -281,6 +379,20 @@ export default function CustomChatBot() {
           </ChatFooter>
         </ChatBodyAndFooter>
       </ChatBody>
+      {error && <ErrorModal text={error} customAction={closeErrorModal} />}
+      {isLoading ? (
+        <Modal
+          modalStyle={{
+            display: "flex",
+            alignItems: "center",
+            height: "30px",
+            width: "30px",
+            borderRadius: "10px",
+          }}
+        >
+          <LoaderComponent extraSpace={true} />
+        </Modal>
+      ) : null}
     </MainContainer>
   );
 }

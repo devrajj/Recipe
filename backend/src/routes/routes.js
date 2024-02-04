@@ -45,6 +45,6 @@ router.get(
 );
 
 // Logout user
-router.delete("/logout", authenticateJwtToken, userController.logoutUser);
+router.put("/logout", authenticateJwtToken, userController.logoutUser);
 
 module.exports = router;

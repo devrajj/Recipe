@@ -1,6 +1,8 @@
 import { useState } from "react";
 import styled from "styled-components";
 import { Link, useNavigate } from "react-router-dom";
+import { loginUser } from "../../utils/networkUtils";
+import ErrorModal from "../shared/ErrorModal";
 
 const MainContainer = styled.div`
   display: flex;
@@ -68,11 +70,28 @@ export default function LoginComponent() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (email && password) {
-      navigate("/recipe-chatbot");
+      try {
+        const res = await loginUser({ email, password });
+        if (res && res.data && res.data.ok && res.data.data) {
+          const token = res.data.data;
+          localStorage.setItem("jwtToken", token);
+          navigate("/recipe-chatbot");
+        } else {
+          setError(res.data.err);
+        }
+      } catch (err) {
+        console.error("Login failed", err);
+        setError("Something went wrong");
+      }
     }
+  };
+
+  const closeErrorModal = () => {
+    setError("");
   };
 
   return (
@@ -114,6 +133,7 @@ export default function LoginComponent() {
           <SignUpLink>Signup</SignUpLink>
         </Link>
       </SignUpContainer>
+      {error && <ErrorModal text={error} customAction={closeErrorModal} />}
     </MainContainer>
   );
 }

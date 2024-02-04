@@ -40,11 +40,28 @@ module.exports = {
         $limit: pageLength,
       },
       {
+        $lookup: {
+          from: "favourite",
+          localField: "_id",
+          foreignField: "recipe",
+          as: "favourite",
+        },
+      },
+      {
         $project: {
           _id: 1,
           question: 1,
           recipeText: 1,
           recipeFile: 1,
+          isFavourite: {
+            $cond: {
+              if: {
+                $gt: [{ $size: "$favourite" }, 0],
+              },
+              then: true,
+              else: false,
+            },
+          },
         },
       },
     ]),

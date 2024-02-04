@@ -31,11 +31,13 @@ class RecipeAssistant {
         messages: [
           {
             role: "system",
-            content: "You are a helpful assistant that provides recipes.",
+            content: `You are a recipe assistant that provides recipes of real and made up dishes across the globe asked by a user. 
+            Now if it is a real or a made up dish generate recipe and ingredients for that dish but if the question is 
+            not related to food then give the response as Sorry cannot provide recipe for the dish that you provided always in this case. `,
           },
           {
             role: "user",
-            content: `Give me the recipe for ${userPrompt}`,
+            content: userPrompt,
           },
         ],
       });
@@ -57,15 +59,12 @@ class RecipeAssistant {
         this.generateImage({ userPrompt }),
       ]);
       return {
-        ok: true,
-        data: {
-          text: completionData.value,
-          file: imageData.value,
-        },
+        text: completionData.value,
+        file: imageData.value,
       };
     } catch (err) {
       console.error("Error in createPrompt:", err.stack);
-      return { ok: false, err: err.stack };
+      return { text: "", file: "" };
     }
   }
 }

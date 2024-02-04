@@ -7,7 +7,7 @@ const blacklistJwtSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-blacklistJwtSchema.index({ user: 1, recipe: 1 }, { unique: true });
+blacklistJwtSchema.index({ token: 1 }, { unique: true });
 
 const blacklistJwtModel = mongoose.model(
   "blacklistjwt",
@@ -16,6 +16,7 @@ const blacklistJwtModel = mongoose.model(
 );
 
 module.exports = {
+  blacklistJwtModel,
   create: async ({ insertDict }) => new blacklistJwtModel(insertDict).save(),
   findOne: async ({ query, projection }) =>
     blacklistJwtModel.findOne(query, projection).lean(),
